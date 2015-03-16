@@ -6,7 +6,7 @@ identifier  int|double|char
 word  [a-zA-Z][a-zA-Z0-9_]*
 space [ \t\n]
 function_delims [,()]
-%Start COMMENT DECLARE
+%Start COMMENT DECLARE FUNC
 
 %%
 "/*"                    { BEGIN(COMMENT); comment_block = 1; }
@@ -24,11 +24,18 @@ function_delims [,()]
 
 \n                      ++lines;
 
-<*>{identifier}            {
+<INITIAL>{identifier}            {
         printf("#%d data type  : %s\n", lines + 1, yytext);
         BEGIN(DECLARE);
 }
-<DECLARE>{word}[^(]     printf("#%d function ID: %s\n", lines + 1, yytext);
+<DECLARE>{word}[^(]     {
+        printf("#%d function ID: %s\n", lines + 1, yytext);
+        BEGIN(FUNC);
+}
+<FUNC>{identifier}      {
+        printf("#%d data type  : %s\n", lines + 1, yytext);
+        BEGIN(DECLARE);
+}
 <DECLARE>")"            BEGIN INITIAL;
 [(){},;]                printf("#%d %s\n", lines + 1, yytext);
 {space}                 ;
