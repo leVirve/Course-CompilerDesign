@@ -4,8 +4,10 @@
 %}
 identifier  int|double|char
 word  [a-zA-Z][a-zA-Z0-9_]*
+operators [+\-*/=]
 space [ \t\n]
-function_delims [,()]
+number 0|[1-9][0-9]*
+realnumber (0|[1-9][0-9]*)\.[0-9]*
 %Start COMMENT DECLARE FUNC
 
 %%
@@ -32,14 +34,16 @@ function_delims [,()]
         printf("#%d function ID: %s\n", lines + 1, yytext);
         BEGIN(FUNC);
 }
-<FUNC>{identifier}      {
-        printf("#%d data type  : %s\n", lines + 1, yytext);
+<FUNC>{identifier}      printf("#%d data type  : %s\n", lines + 1, yytext);
+<FUNC>{word}            {
+        printf("#%d variable ID: %s\n", lines + 1, yytext);
         BEGIN(DECLARE);
 }
 <DECLARE>")"            BEGIN INITIAL;
 [(){},;]                printf("#%d %s\n", lines + 1, yytext);
+{operators}             printf("#%d operator   : %s\n", lines + 1, yytext);
+{number}|{realnumber}   printf("#%d number     : %s\n", lines + 1, yytext);
 {space}                 ;
-DECLARE
 %%
 
 int main()
