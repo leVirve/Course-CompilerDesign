@@ -8,7 +8,8 @@ operators [+\-*/=]
 space [ \t\n]
 number 0|[1-9][0-9]*
 realnumber (0|[1-9][0-9]*)\.[0-9]*
-%Start COMMENT DECLARE FUNC
+char '.'
+%Start COMMENT DECLARE FUNC ASSIGN
 
 %%
 "/*"                    { BEGIN(COMMENT); comment_block = 1; }
@@ -30,20 +31,29 @@ realnumber (0|[1-9][0-9]*)\.[0-9]*
         printf("#%d data type  : %s\n", lines + 1, yytext);
         BEGIN(DECLARE);
 }
-<DECLARE>{word}[^(]     {
+<DECLARE>{word}\(      {
+        yytext[yyleng - 1] = '\0';
         printf("#%d function ID: %s\n", lines + 1, yytext);
+        unput('(');
         BEGIN(FUNC);
 }
-<FUNC>{identifier}      printf("#%d data type  : %s\n", lines + 1, yytext);
-<FUNC>{word}            {
+<DECLARE>{word}=       {
+        yytext[yyleng - 1] = '\0';
         printf("#%d variable ID: %s\n", lines + 1, yytext);
-        BEGIN(DECLARE);
+        unput('=');
+        BEGIN(INITIAL);
 }
+<FUNC>{identifier}      printf("#%d data type  : %s\n", lines + 1, yytext);
+<FUNC>{word}            printf("#%d variable ID: %s\n", lines + 1, yytext);
 <DECLARE>")"            BEGIN INITIAL;
+
+
 [(){},;]                printf("#%d %s\n", lines + 1, yytext);
 {operators}             printf("#%d operator   : %s\n", lines + 1, yytext);
 {number}|{realnumber}   printf("#%d number     : %s\n", lines + 1, yytext);
+{char}                  printf("#%d char       : %s\n", lines + 1, yytext);
 {space}                 ;
+return                  printf("#%d return\n", lines + 1);
 %%
 
 int main()
