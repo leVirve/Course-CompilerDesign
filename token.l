@@ -1,5 +1,5 @@
 %{
-    int lines = 0;
+    int lines = 1;
     char comment_block = 0;
 %}
 identifier  int|double|char
@@ -18,47 +18,48 @@ char '.'
 <COMMENT>\n             printf("#%d comment\n", ++lines);
 <COMMENT>"*/"           { 
         if(comment_block) {
-            printf("#%d comment\n", lines + 1);
+            printf("#%d comment\n", lines);
             comment_block = 0;
         } 
         BEGIN INITIAL;
     }
-"//"+[^\n]*             printf("#%d comment\n", lines + 1);
+"//"+[^\n]*             printf("#%d comment\n", lines);
 
 \n                      ++lines;
 
-<INITIAL>{identifier}            {
-        printf("#%d data type  : %s\n", lines + 1, yytext);
+<INITIAL>{identifier}   {
+        printf("#%d data type  : %s\n", lines, yytext);
         BEGIN(DECLARE);
 }
-<DECLARE>{word}\(      {
+<DECLARE>{word}\(       {
         yytext[yyleng - 1] = '\0';
-        printf("#%d function ID: %s\n", lines + 1, yytext);
+        printf("#%d function ID: %s\n", lines, yytext);
         unput('(');
         BEGIN(FUNC);
 }
-<DECLARE>{word}=       {
-        yytext[yyleng - 1] = '\0';
-        printf("#%d variable ID: %s\n", lines + 1, yytext);
-        unput('=');
-        BEGIN(INITIAL);
-}
-<FUNC>{identifier}      printf("#%d data type  : %s\n", lines + 1, yytext);
-<FUNC>{word}            printf("#%d variable ID: %s\n", lines + 1, yytext);
 <DECLARE>")"            BEGIN INITIAL;
+<DECLARE>{word}=        {
+        yytext[yyleng - 1] = '\0';
+        printf("#%d variable ID: %s\n", lines, yytext);
+        unput('=');
+        BEGIN(FUNC);
+}
+<DECLARE>";"            BEGIN INITIAL;
+<FUNC>{identifier}      printf("#%d data type  : %s\n", lines, yytext);
+<FUNC>{word}            printf("#%d variable ID: %s\n", lines, yytext);
 
 
-[(){},;]                printf("#%d %s\n", lines + 1, yytext);
-{operators}             printf("#%d operator   : %s\n", lines + 1, yytext);
-{number}|{realnumber}   printf("#%d number     : %s\n", lines + 1, yytext);
-{char}                  printf("#%d char       : %s\n", lines + 1, yytext);
+[(){},;]                printf("#%d %s\n", lines, yytext);
+{operators}             printf("#%d operator   : %s\n", lines, yytext);
+{number}|{realnumber}   printf("#%d number     : %s\n", lines, yytext);
+{char}                  printf("#%d char       : %s\n", lines, yytext);
 {space}                 ;
-return                  printf("#%d return\n", lines + 1);
+return                  printf("#%d return\n", lines);
 %%
 
 int main()
 {
     yylex();
-    printf("There are %d lines\n", lines);
+    printf("There are %d lines\n", lines - 1);
     return 0;
 }

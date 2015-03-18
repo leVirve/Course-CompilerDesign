@@ -1,0 +1,8 @@
+
+*.out
+*.sh
+lex.yy.c
+
+
+reference.l
+testfile.c
