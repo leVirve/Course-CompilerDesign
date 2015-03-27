@@ -1,5 +1,8 @@
 %{
     int lines = 1;
+    void clear();
+    void print();
+    void print_sub();
 %}
 datatype        int|double|char
 identifier      [a-zA-Z_][a-zA-Z0-9_]*
@@ -17,19 +20,23 @@ character       '.'
 <COMMENT>"*/"           { printf("#%-2d comment\n", lines); BEGIN INITIAL; } 
 "//"+[^\n]*             printf("#%-2d comment\n", lines);
 \n                      ++lines;
-return                  printf("#%-2d return\n", lines);
-"#include".*            printf("#%-2d include header file\n", lines);
-for\(                   printf("#%-2d for-loop   : %.*s\n", lines, yyleng - 1, yytext);
-{symbol}                printf("#%-2d %s\n", lines, yytext);
-{operators}             printf("#%-2d operator   : %s\n", lines, yytext);
-{number}|{realnumber}   printf("#%-2d number     : %s\n", lines, yytext);
-{datatype}              printf("#%-2d data type  : %s\n", lines, yytext);
+"#include".*            { clear(); print("include header file\n", lines); }
+for\(                   { clear(); print_sub("for-loop"); }
+return                  print("");
+{symbol}                print("");
+{operators}             print("operator   : ");
+{number}|{realnumber}   print("number     : ");
+{datatype}              print("data type  : ");
+{identifier}            print("variable ID: ");
 {character}             { printf("#%-2d '\n#%-2d character  : %c\n", lines, lines, yytext[1]); unput('\''); }
-{identifier}\(          { printf("#%-2d function ID: %.*s\n", lines, yyleng - 1, yytext); unput('('); }
-{identifier}=           { printf("#%-2d variable ID: %.*s\n", lines, yyleng - 1, yytext); unput('='); }
-{identifier}            printf("#%-2d variable ID: %s\n", lines, yytext);
+{identifier}\(          { print_sub("function ID: "); unput('('); }
+{identifier}=           { print_sub("variable ID: "); unput('='); }
 .                       ;
 %%
+
+void clear() { yytext[0] = '\0'; }
+void print(char *format) { printf("#%-2d %s%s\n", lines, format, yytext); }
+void print_sub(char *format) { printf("#%-2d %s%.*s\n", lines, format, yyleng - 1, yytext); }
 
 int main()
 {
