@@ -3,7 +3,7 @@
 %}
 datatype        int|double|char
 identifier      [a-zA-Z_][a-zA-Z0-9_]*
-operators       [+\-*/=]
+operators       [+\-*/=<>]|"++"|"--"|"<="|">="
 symbol          [(){}',;]
 number          0|[1-9][0-9]*
 realnumber      (0|[1-9][0-9]*)\.[0-9]*
@@ -18,6 +18,8 @@ character       '.'
 "//"+[^\n]*             printf("#%-2d comment\n", lines);
 \n                      ++lines;
 return                  printf("#%-2d return\n", lines);
+"#include".*            printf("#%-2d include header file\n", lines);
+for\(                   printf("#%-2d for-loop   : %.*s\n", lines, yyleng - 1, yytext);
 {symbol}                printf("#%-2d %s\n", lines, yytext);
 {operators}             printf("#%-2d operator   : %s\n", lines, yytext);
 {number}|{realnumber}   printf("#%-2d number     : %s\n", lines, yytext);
