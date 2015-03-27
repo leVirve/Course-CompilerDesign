@@ -2,6 +2,7 @@
     int lines = 1;
     void clear();
     void print();
+    void prints();
     void print_sub();
 %}
 datatype        int|double|char
@@ -14,13 +15,13 @@ character       '.'
 %x COMMENT
 
 %%
+"//"+[^\n]*             prints("comment");
 "/*"                    BEGIN COMMENT;
-<COMMENT>\n             printf("#%-2d comment\n", lines++);
+<COMMENT>\n             { prints("comment"); lines++; }
+<COMMENT>"*/"           { prints("comment"); BEGIN INITIAL; } 
 <COMMENT>.              ;
-<COMMENT>"*/"           { printf("#%-2d comment\n", lines); BEGIN INITIAL; } 
-"//"+[^\n]*             printf("#%-2d comment\n", lines);
-\n                      ++lines;
-"#include".*            { clear(); print("include header file\n", lines); }
+\n                      lines++;
+"#include".*            { clear(); print("include header file"); }
 for\(                   { clear(); print_sub("for-loop"); }
 return                  print("");
 {symbol}                print("");
@@ -28,15 +29,16 @@ return                  print("");
 {number}|{realnumber}   print("number     : ");
 {datatype}              print("data type  : ");
 {identifier}            print("variable ID: ");
-{character}             { printf("#%-2d '\n#%-2d character  : %c\n", lines, lines, yytext[1]); unput('\''); }
+{character}             { prints("'"); prints("character  : %c", yytext[1]); unput('\''); }
 {identifier}\(          { print_sub("function ID: "); unput('('); }
 {identifier}=           { print_sub("variable ID: "); unput('='); }
 .                       ;
 %%
 
 void clear() { yytext[0] = '\0'; }
-void print(char *format) { printf("#%-2d %s%s\n", lines, format, yytext); }
-void print_sub(char *format) { printf("#%-2d %s%.*s\n", lines, format, yyleng - 1, yytext); }
+void prints(char *p, char* args[]) { printf("#%-2d ", lines); printf(p, args); putchar('\n'); }
+void print(char *format)           { printf("#%-2d %s%s\n", lines, format, yytext); }
+void print_sub(char *format)       { printf("#%-2d %s%.*s\n", lines, format, yyleng - 1, yytext); }
 
 int main()
 {
