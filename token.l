@@ -6,12 +6,14 @@
     void print_sub();
 %}
 datatype        int|double|char
+pointer         char\*
 identifier      [a-zA-Z_][a-zA-Z0-9_]*
-operators       [+\-*/=<>]|"++"|"--"|"<="|">="
+operators       [+\-*/=<>]|"++"|"--"|"<="|">="|"=="|"+="|"-="|"*="|"/="|"!="
 symbol          [(){}',;]
 number          0|[1-9][0-9]*
 realnumber      (0|[1-9][0-9]*)\.[0-9]*
 character       '.'
+string          \".*\"
 %x COMMENT
 
 %%
@@ -23,11 +25,14 @@ character       '.'
 \n                      lines++;
 "#include".*            { clear(); print("include header file"); }
 for\(                   { clear(); print_sub("for-loop"); }
-return                  print("");
+while\(                 { clear(); print_sub("while-loop"); }
+if\(                    { clear(); print_sub("if statement"); }
+return|else             print("");
 {symbol}                print("");
+{string}                print("string     : ");
 {operators}             print("operator   : ");
 {number}|{realnumber}   print("number     : ");
-{datatype}              print("data type  : ");
+{datatype}|{pointer}    print("data type  : ");
 {identifier}            print("variable ID: ");
 {character}             { prints("'"); prints("character  : %c", yytext[1]); unput('\''); }
 {identifier}\(          { print_sub("function ID: "); unput('('); }
