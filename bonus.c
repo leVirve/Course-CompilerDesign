@@ -1,4 +1,5 @@
 #include<stdio.h>
+#define NUM 100
 
 int main()
 {
