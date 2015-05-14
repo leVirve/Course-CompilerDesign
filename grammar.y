@@ -1,5 +1,6 @@
 %{
     #include <stdio.h>
+    int yydebug=1;
 %}
 
 %union {
@@ -9,6 +10,8 @@
 
 %token TYPE, IDENTIFIER, FUNCTION_IDENTIFIER, NUMBER, CHAR
 %token RETURN
+
+%left '+' '-' '*' '/'
 
 %start program
 
@@ -38,8 +41,7 @@ parameter_list
 parameter
         : { printf("null -> parameter\n"); }
         | TYPE IDENTIFIER { printf("TYPE IDENTIFIER -> parameter\n"); }
-        | IDENTIFIER {printf("IDENTIFIER -> parameter\n");}
-        | TERM {printf("TERM -> parameter\n");}
+        | TERM {printf("term -> parameter\n");}
         ;
 
 statement_list
@@ -47,8 +49,8 @@ statement_list
         | statement_list statement { printf("statement_list statement -> statement_list\n"); }
 
 statement
-        : IDENTIFIER '=' expression { printf("IDENTIFIER '='' expression -> statement\n"); }
-        | TYPE IDENTIFIER '=' expression { printf("TYPE IDENTIFIER '='' expression -> statement\n"); }
+        : IDENTIFIER '=' expression { printf("IDENTIFIER '=' expression -> statement\n"); }
+        | TYPE IDENTIFIER '=' expression { printf("TYPE IDENTIFIER '=' expression -> statement\n"); }
         | TYPE IDENTIFIER { printf("TYPE IDENTIFIER -> statement\n"); }
         | RETURN expression {printf("RETURN expression -> statement\n");}
         ;
@@ -60,7 +62,7 @@ expression
         | expression '/' expression {printf("expression '/' expression -> expression\n");}
         | '(' expression ')' {printf("'(' expression ')' -> expression\n");}
         | FUNCTION_IDENTIFIER '(' parameter_list ')' {printf("FUNCTION_IDENTIFIER '(' parameter_list ')' -> expression\n");}
-        | TERM
+        | TERM {printf("term -> expression\n");}
         ;
 
 TERM: NUMBER {printf("NUMBER -> term\n");} | CHAR {printf("CHAR -> term\n");} | IDENTIFIER {printf("IDENTIFIER -> term\n");} ;
