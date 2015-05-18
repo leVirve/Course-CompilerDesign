@@ -11,7 +11,8 @@
 %token TYPE, IDENTIFIER, FUNCTION_IDENTIFIER, NUMBER, CHAR
 %token RETURN
 
-%left '+' '-' '*' '/'
+%left '+' '-'
+%left '*' '/'
 
 %start program
 
