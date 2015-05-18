@@ -1,39 +1,33 @@
 %{
     #include "y.tab.h"
-    int lines = 1;
-    void clear();
-    void print();
-    void prints();
-    void print_sub();
+    int line = 1;
 %}
+
 datatype        int|double|char
 identifier      [a-zA-Z_][a-zA-Z0-9_]*
-operators       [+\-*/=<>]
-symbol          [(){}',;\"]
 number          0|[1-9][0-9]*
 realnumber      (0|[1-9][0-9]*)\.[0-9]*
+operators       [+\-*/=<>]
+symbols         [(){},]
 %x COMMENT
-
 %%
-"//"[^\n]*              prints("comment");
+
+"//"[^\n]*              printf("#%-2d comment\n", line);
 "/*"                    BEGIN COMMENT;
-<COMMENT>\n             { prints("comment"); lines++; }
-<COMMENT>"*/"           { prints("comment"); BEGIN INITIAL; }
+<COMMENT>\n             {printf("#%-2d comment\n", line++);};
+<COMMENT>"*/"           {printf("#%-2d comment\n", line);BEGIN INITIAL;}
 <COMMENT>.              ;
-\n                      lines++;
-return                  { print(""); return RETURN; }
-{symbol}                { print(""); return yytext[0]; }
-{operators}             { print("operator   : "); return yytext[0]; }
-{number}|{realnumber}   { print("number     : "); return NUMBER; }
-{datatype}              { print("data type  : "); return TYPE; }
-{identifier}            { print("variable ID: "); return IDENTIFIER; }
-'./'                    { prints("'"); prints("character  : %c", yytext[1]); return CHAR; }
-{identifier}/\(         { print("function ID: "); return FUNCTION_IDENTIFIER; }
-{identifier}/=          { print("variable ID: "); return IDENTIFIER; }
+
+\n                      line++;
+{symbols}               {printf("#%-2d %s\n", line, yytext);return yytext[0];}
+{operators}             {printf("#%-2d operator   : %s\n", line, yytext);return yytext[0];}
+'./'                    {printf("#%-2d '\n#%-2d character  : %c\n#%-2d '\n", line, line, yytext[1], line);return CHAR;}
+"return"                {printf("#%-2d return\n", line);return RETURN;}
+{number}|{realnumber}   {printf("#%-2d operator   : %s\n", line, yytext);return NUMBER;}
+{datatype}              {printf("#%-2d type   : %s\n", line, yytext);return TYPE;}
+{identifier}            {printf("#%-2d variable ID: %s\n", line, yytext);return IDENTIFIER;}
+{identifier}/\(         {printf("#%-2d function ID: %s\n", line, yytext);return FUNCTION_IDENTIFIER;}
+{identifier}/=          {printf("#%-2d variable ID: %s\n", line, yytext);return IDENTIFIER;}
 .                       ;
 %%
-
-void clear() { yytext[0] = '\0'; }
-void print(char *format)           { printf("#%-2d %s%s\n", lines, format, yytext); }
-void prints(char *p, char* args[]) { printf("#%-2d ", lines); printf(p, args); putchar('\n'); }
 
