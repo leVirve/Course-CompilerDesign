@@ -27,7 +27,7 @@ functions
 
 function
         : function_declaration '{' statement_list '}' { printf("function_declaration { statement_list } -> function\n"); }
-        | function_declaration { printf("function_declaration -> function\n"); }
+        | function_declaration ';' { printf("function_declaration ';' -> function\n"); }
         ;
 
 function_declaration
@@ -46,8 +46,8 @@ parameter
         ;
 
 statement_list
-        : statement { printf("statement -> statement_list\n"); }
-        | statement_list statement { printf("statement_list statement -> statement_list\n"); }
+        : statement ';' { printf("statement ';' -> statement_list\n"); }
+        | statement_list statement ';' { printf("statement_list statement ';' -> statement_list\n"); }
 
 statement
         : IDENTIFIER '=' expression { printf("IDENTIFIER '=' expression -> statement\n"); }

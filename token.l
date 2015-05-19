@@ -8,7 +8,7 @@ identifier      [a-zA-Z_][a-zA-Z0-9_]*
 number          0|[1-9][0-9]*
 realnumber      (0|[1-9][0-9]*)\.[0-9]*
 operators       [+\-*/=<>]
-symbols         [(){},]
+symbols         [(){},;]
 %x COMMENT
 %%
 
