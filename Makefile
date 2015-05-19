@@ -3,12 +3,17 @@ all:
 	byacc -d grammar.y
 	flex token.l
 	gcc lex.yy.c y.tab.c -lfl -o all.o
-	./all.o < grammar.c
+	./all.o < testfile.c
 
-test:
-	byacc -d test.y
-	flex token.l
-	gcc lex.yy.c y.tab.c -lfl -o test.o
-	./test.o < 1.c
+build:
+	mkdir build
+	cp token.l build/101062337_hw2.l
+	cp grammar.y build/101062337_hw2.y
+	scp build/* 101062337@140.114.88.219:~/Assignment2
 
-
+clean:
+	rm -rf build
+	rm all.o
+	rm y.tab.h
+	rm y.tab.c
+	rm lex.yy.c
