@@ -1,0 +1,36 @@
+#1  include header file
+#3  data type  : int
+#3  function ID: main
+#3  (
+#3  )
+#4  {
+#5  data type  : int
+#5  variable ID: a
+#5  operator   : =
+#5  number     : 0
+#5  ;
+#6  for-loop   : for
+#6  data type  : int
+#6  variable ID: i
+#6  operator   : =
+#6  number     : 0
+#6  ;
+#6  variable ID: i
+#6  operator   : <=
+#6  number     : 3
+#6  ;
+#6  variable ID: i
+#6  operator   : ++
+#6  )
+#6  {
+#7  variable ID: a
+#7  operator   : =
+#7  variable ID: a
+#7  operator   : +
+#7  variable ID: i
+#7  ;
+#8  }
+#9  return
+#9  number     : 0
+#9  ;
+#10 }

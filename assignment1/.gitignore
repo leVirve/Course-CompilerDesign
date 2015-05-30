@@ -1,0 +1,13 @@
+
+*.out
+*.sh
+*.sw?
+lex.yy.c
+
+build/
+
+reference.l
+testfile.c
+result.*
+
+/build
