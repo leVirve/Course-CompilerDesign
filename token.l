@@ -1,65 +1,51 @@
 %{
     int lines = 1;
-    char comment_block = 0;
+    void clear();
+    void print();
+    void prints();
+    void print_sub();
 %}
-identifier  int|double|char
-word  [a-zA-Z][a-zA-Z0-9_]*
-operators [+\-*/=]
-space [ \t\n]
-number 0|[1-9][0-9]*
-realnumber (0|[1-9][0-9]*)\.[0-9]*
-char '.'
-%Start COMMENT DECLARE FUNC ASSIGN
+datatype        int|double|char
+pointer         int\*|double\*|char\*
+identifier      [a-zA-Z_][a-zA-Z0-9_]*
+operators       [+\-*/=<>]|"++"|"--"|"<="|">="|"=="|"+="|"-="|"*="|"/="|"!="
+symbol          [(){}',;]
+number          0|[1-9][0-9]*
+realnumber      (0|[1-9][0-9]*)\.[0-9]*
+character       '.'
+string          \".*\"
+%x COMMENT
 
 %%
-"/*"                    { BEGIN(COMMENT); comment_block = 1; }
-<COMMENT>[^*\n]*        ;
-<COMMENT>"*"+[^*/\n]*   ;
-<COMMENT>\n             printf("#%d comment\n", ++lines);
-<COMMENT>"*/"           { 
-        if(comment_block) {
-            printf("#%d comment\n", lines);
-            comment_block = 0;
-        } 
-        BEGIN INITIAL;
-    }
-"//"+[^\n]*             printf("#%d comment\n", lines);
-
-\n                      ++lines;
-
-<INITIAL>{identifier}   {
-        printf("#%d data type  : %s\n", lines, yytext);
-        BEGIN(DECLARE);
-}
-<DECLARE>{word}\(       {
-        yytext[yyleng - 1] = '\0';
-        printf("#%d function ID: %s\n", lines, yytext);
-        unput('(');
-        BEGIN(FUNC);
-}
-<DECLARE>")"            BEGIN INITIAL;
-<DECLARE>{word}=        {
-        yytext[yyleng - 1] = '\0';
-        printf("#%d variable ID: %s\n", lines, yytext);
-        unput('=');
-        BEGIN(FUNC);
-}
-<DECLARE>";"            BEGIN INITIAL;
-<FUNC>{identifier}      printf("#%d data type  : %s\n", lines, yytext);
-<FUNC>{word}            printf("#%d variable ID: %s\n", lines, yytext);
-
-
-[(){},;]                printf("#%d %s\n", lines, yytext);
-{operators}             printf("#%d operator   : %s\n", lines, yytext);
-{number}|{realnumber}   printf("#%d number     : %s\n", lines, yytext);
-{char}                  printf("#%d char       : %s\n", lines, yytext);
-{space}                 ;
-return                  printf("#%d return\n", lines);
+"//"+[^\n]*             prints("comment");
+"/*"                    BEGIN COMMENT;
+<COMMENT>\n             { prints("comment"); lines++; }
+<COMMENT>"*/"           { prints("comment"); BEGIN INITIAL; } 
+<COMMENT>.              ;
+\n                      lines++;
+#include.*              { clear(); print("include header file"); }
+#define.*               { clear(); print("MARCO"); }
+for\(|while\(|if\(      { print_sub(""); unput('('); }
+return|else             print("");
+{symbol}                print("");
+{string}                print("string     : ");
+{operators}             print("operator   : ");
+{number}|{realnumber}   print("number     : ");
+{datatype}|{pointer}    print("data type  : ");
+{identifier}            print("variable ID: ");
+{character}             { prints("'"); prints("character  : %c", yytext[1]); unput('\''); }
+{identifier}\(          { print_sub("function ID: "); unput('('); }
+{identifier}=           { print_sub("variable ID: "); unput('='); }
+.                       ;
 %%
+
+void clear() { yytext[0] = '\0'; }
+void print(char *format)           { printf("#%-2d %s%s\n", lines, format, yytext); }
+void prints(char *p, char* args[]) { printf("#%-2d ", lines); printf(p, args); putchar('\n'); }
+void print_sub(char *format)       { printf("#%-2d %s%.*s\n", lines, format, yyleng - 1, yytext); }
 
 int main()
 {
     yylex();
-    printf("There are %d lines\n", lines - 1);
     return 0;
 }
