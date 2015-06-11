@@ -19,7 +19,7 @@ char* install_symbol(char *s)
   if (cur_counter >= MAX_TABLE_SIZE)
     perror("Symbol Table Full");
   else {
-    DEBUG("(scope:%d) intall %s\n", cur_scope, s);
+    DEBUG("(scope:%d) intall %s @%d\n", cur_scope, s, cur_counter);
     table[cur_counter].scope = cur_scope;
     table[cur_counter].name = strdup(s);
     cur_counter++;
@@ -68,10 +68,12 @@ void set_scope_and_offset_of_param(char *s)
     table[index].type = T_FUNCTION;
     total_args = cur_counter - index - 1;
     table[index].total_args = total_args;
+    DEBUG(">>>>>>>>>>>>>>>> total args: %d\n", total_args);
     for (int j = total_args, i = cur_counter - 1; i > index; i--, j--) {
       table[i].scope = cur_scope;
-      table[i].offset = j;
+      table[i].offset = j + 2;
       table[i].mode = ARGUMENT_MODE;
+      fprintf(f_asm, "  swi   $r%d, [$fp + (-%d)]\n", j - 1, table[i].offset * 4 + 8);
     }
   }
 }

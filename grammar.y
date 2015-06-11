@@ -13,6 +13,7 @@
 
   int pre_num = 0;
   char pre_func[30];
+  int args = 0;
 %}
 
 %start program
@@ -25,7 +26,7 @@
 %token TYPE, IDENTIFIER, NUMBER, CHAR, INTEGER, FLOAT
 %token RETURN
 
-%type <id> function_declaration, statement, expression, declaration
+%type <id> function_declaration, statement, expression, declaration, parameter
 %type <id> IDENTIFIER, TERM
 %type <intv> NUMBER
 
@@ -44,8 +45,8 @@ functions
 function
         : function_declaration {
                 cur_scope++;
-                set_scope_and_offset_of_param($1);
                 code_gen_func_header($1);
+                set_scope_and_offset_of_param($1);
             }
         '{' declarations {
                 set_local_vars($1);
@@ -60,9 +61,13 @@ function
         ;
 
 function_declaration
-        : TYPE IDENTIFIER '(' parameter_list ')' {
-                $$=install_symbol($2);
-                sprintf(pre_func, "%s", $$);
+        : TYPE IDENTIFIER {
+            $$=install_symbol($2);
+            sprintf(pre_func, "%s", $$);
+            DEBUG("go in %s\n", $$);
+            }
+        '(' parameter_list ')' {
+                $$ = $2;
                 printf("TYPE IDENTIFIER '(' parameter_list ')' -> function_declaration\n");
             }
         ;
@@ -70,7 +75,10 @@ function_declaration
 parameter_list
         : parameter_list ',' parameter { printf("parameter_list ',' parameter -> parameter_list\n"); }
         | parameter {
-                //fprintf(f_asm, "  swi   $r0, [$fp + (-%d)]\n", table[index].offset * 4 + 8);
+                if(!$1) {
+                    //int index = look_up_symbol($1);
+                    //fprintf(f_asm, "  swi   $r0, [$fp + (-%d)]\n", table[index].offset * 4 + 8);
+                }
                 printf("parameter -> parameter_list\n");
             }
         ;
@@ -78,9 +86,9 @@ parameter_list
 parameter
         : { printf("null -> parameter\n"); }
         | TYPE IDENTIFIER {
-                printf("TYPE IDENTIFIER -> parameter\n");
+            $$=install_symbol($2);
+            printf("TYPE IDENTIFIER -> parameter\n");
             }
-        | TERM {printf("term -> parameter\n");}
         ;
 
 declarations
@@ -132,13 +140,27 @@ statement
                 printf("IDENTIFIER '=' expression -> statement\n");
             }
         | RETURN expression {
-                fprintf(f_asm, "  movi  $r0, %d\n", 0);
+                if($2 == NULL) fprintf(f_asm, "  movi  $r0, %d\n", 0);
                 printf("RETURN expression -> statement\n");
             }
         ;
 
+arguments
+        : arguments ',' TERM {
+            fprintf(f_asm, "  movi  $r%d, %d\n", args++, pre_num);
+            printf("arguments ',' TERM -> arguments\n");
+            }
+        | TERM {
+            fprintf(f_asm, "  movi  $r%d, %d\n", args++, pre_num);
+            printf("TERM -> arguments\n");
+            }
+        ;
+
 expression
-        : IDENTIFIER '(' parameter_list ')' {printf("IDENTIFIER '(' parameter_list ')' -> expression\n");}
+        : IDENTIFIER '(' arguments ')' {
+                fprintf(f_asm, "  jal  %s\n", $1);
+                printf("IDENTIFIER '(' parameter_list ')' -> expression\n");
+            }
         | expression '/' expression {
                 // ggggg 
                 fprintf(f_asm, "  movi  $r0, %d\n", 5);
@@ -158,12 +180,19 @@ expression
                 if ($3 == NULL) {
                     fprintf(f_asm, "  addi  $r0, $r0, -%d\n", pre_num);
                 } else {
-                    int index = look_up_symbol($1);
-                    fprintf(f_asm, "  lwi   $r0, [$fp + (-%d)]\n", table[index].offset * 4 + 8);
-                    fprintf(f_asm, "  sub   $r0, $r1, $0\n");
+                    int idx = look_up_symbol($3);
+                    fprintf(f_asm, "  lwi   $r1, [$fp + (-%d)]\n", table[idx].offset * 4 + 8);
+                    fprintf(f_asm, "  sub   $r0, $r0, $r1\n");
                 }
+                $$ = $1;
             }
-        | TERM {printf("term -> expression\n");}
+        | TERM {
+            if ($1 != NULL) {
+                int idx = look_up_symbol($1);
+                fprintf(f_asm, "  lwi   $r0, [$fp + (-%d)]\n", table[idx].offset * 4 + 8);
+            }
+            printf("term -> expression\n");
+            }
         ;
 
 TERM
