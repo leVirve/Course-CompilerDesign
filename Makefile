@@ -20,3 +20,11 @@ test2:
 	cat andes.s
 	diff andes.s test2_ans.s
 
+clean:
+	rm lex.yy.c
+	rm y.tab.h y.tab.c y.output
+	rm *.gch
+	rm andes.adx
+	rm andes.s
+	rm andes_compiler
+
