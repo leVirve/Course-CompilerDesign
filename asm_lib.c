@@ -62,16 +62,14 @@ void set_scope_and_offset_of_param(char *s)
 {
   int total_args;
   int index = look_up_symbol(s);
-  DEBUG("...%d\n", index);
   if (index < 0) perror("Error in function header");
   else {
     table[index].type = T_FUNCTION;
     total_args = cur_counter - index - 1;
     table[index].total_args = total_args;
-    DEBUG(">>>>>>>>>>>>>>>> total args: %d\n", total_args);
     for (int j = total_args, i = cur_counter - 1; i > index; i--, j--) {
       table[i].scope = cur_scope;
-      table[i].offset = j + 2;
+      table[i].offset = j + 2; // Const for local_var counts
       table[i].mode = ARGUMENT_MODE;
       fprintf(f_asm, "  swi   $r%d, [$fp + (-%d)]\n", j - 1, table[i].offset * 4 + 8);
     }
@@ -80,25 +78,17 @@ void set_scope_and_offset_of_param(char *s)
 
 void set_local_vars(char *functor)
 {
-  DEBUG("func == %s\n", functor);
   int total_locals;
   int index = look_up_symbol(functor);
-  int index1 = index + table[index].total_args;
-  total_locals = cur_counter - index1 - 1;
-  if (total_locals < 0) perror("Error in number of local variables");
+  total_locals = (cur_counter - 1) - index - table[index].total_args;
+
   table[index].total_locals = total_locals;
+
   for (int j = total_locals, i = cur_counter - 1; j > 0; i--, j--) {
     table[i].scope = cur_scope;
     table[i].offset = j;
     table[i].mode = LOCAL_MODE;
   }
-}
-
-void set_global_vars(char *s)
-{
-  int index = look_up_symbol(s);
-  table[index].mode = GLOBAL_MODE;
-  table[index].scope = 1;
 }
 
 void code_gen_func_header(char *function) {
@@ -111,16 +101,6 @@ void code_gen_func_header(char *function) {
   fprintf(f_asm, "  addi    $sp, $sp, -16\n");
 }
 
-void code_gen_global_vars()
-{
-  for (int i = 0; i < cur_counter; i++) {
-    if (table[i].mode == GLOBAL_MODE) {
-      fprintf(f_asm, "_%s  label	word\n", table[i].name);
-      fprintf(f_asm, " db  2 dup (?)\n");
-    }
-  }
-}
-
 void code_gen_at_end_of_function_body(char *function)
 {
   fprintf(f_asm, "  addi    $sp, $fp, -8\n");
@@ -128,15 +108,6 @@ void code_gen_at_end_of_function_body(char *function)
   fprintf(f_asm, "  ret\n");
   fprintf(f_asm, "  .size   %s, .-%s\n", function, function);
 }
-
-
-char* strdup_s (char *s) {
-  char *d = (char*) malloc (strlen (s) + 1);
-  if (d == NULL) return NULL;
-  strcpy(d,s);
-  return d;
-}
-
 
 int check_id_exist(char* text)
 {

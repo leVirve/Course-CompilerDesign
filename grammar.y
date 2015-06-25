@@ -35,7 +35,7 @@
 
 %%
 
-program: functions {printf("functions -> program\n");};
+program: functions { printf("functions -> program\n"); };
 
 functions
         : functions function { printf("functions function -> functions\n"); }
@@ -50,6 +50,24 @@ function
             }
         '{' declarations {
                 set_local_vars($1);
+
+                int index = look_up_symbol($1);
+                for (int i = index + 1; i < cur_counter; i++) {
+                    int val_idx = look_up_symbol_kw(table[i].name) + 1;
+                    if (table[i].scope != cur_scope) break;
+                    if (symbol_t[val_idx].token != INTEGER) continue;
+                    
+                    switch(table[i].mode) {
+                    case ARGUMENT_MODE:
+                        fprintf(f_asm, "  swi   $r%d, [$fp + (-%d)]\n", 1, table[index].offset * 4 + 8);
+                        break;
+                    case LOCAL_MODE:
+                        fprintf(f_asm, "  movi  $r0, %d\n", symbol_t[val_idx].attr.ival);
+                        fprintf(f_asm, "  swi   $r0, [$fp + (-%d)]\n", table[i].offset * 4 + 8);
+                        break;
+                    default: break;
+                    }
+                }
             }
         statement_list {
                 pop_up_symbol(cur_scope);
@@ -74,13 +92,7 @@ function_declaration
 
 parameter_list
         : parameter_list ',' parameter { printf("parameter_list ',' parameter -> parameter_list\n"); }
-        | parameter {
-                if(!$1) {
-                    //int index = look_up_symbol($1);
-                    //fprintf(f_asm, "  swi   $r0, [$fp + (-%d)]\n", table[index].offset * 4 + 8);
-                }
-                printf("parameter -> parameter_list\n");
-            }
+        | parameter { printf("parameter -> parameter_list\n"); }
         ;
 
 parameter
@@ -97,30 +109,12 @@ declarations
         ;
 
 declaration
-        : TYPE IDENTIFIER '=' expression {
+        : TYPE IDENTIFIER '=' NUMBER {
                 $$=install_symbol($2);
-                set_local_vars(pre_func);
-                int index = look_up_symbol($2);
-                int val_idx = look_up_symbol_kw($2) + 1;
-                switch(table[index].mode) {
-                case ARGUMENT_MODE:
-                    break;
-                case LOCAL_MODE:
-                    fprintf(f_asm, "  movi  $r0, %d\n", symbol_t[val_idx].attr.ival);
-                    fprintf(f_asm, "  swi   $r0, [$fp + (-%d)]\n", table[index].offset * 4 + 8);
-                    break;
-                default: break;
-                }
-                $$=$2;
                 printf("TYPE IDENTIFIER '=' expression -> statement\n");
             }
-        | declaration ',' IDENTIFIER '=' expression {
+        | declaration ',' IDENTIFIER '=' NUMBER {
                 $$=install_symbol($3);
-                set_local_vars(pre_func);
-                int index = look_up_symbol($3);
-                int val_idx = look_up_symbol_kw($3) + 1;
-                fprintf(f_asm, "  movi  $r0, %d\n", symbol_t[val_idx].attr.ival);
-                fprintf(f_asm, "  swi   $r0, [$fp + (-%d)]\n", table[index].offset * 4 + 8);
             }
         | TYPE IDENTIFIER {
                 $$=install_symbol($2);
@@ -199,7 +193,6 @@ TERM
     : NUMBER {
         $$=NULL;
         pre_num = $1;
-        DEBUG("..........................%d\n", $1);
         printf("NUMBER -> term\n");
       }
     | CHAR {printf("CHAR -> term\n");}
@@ -224,7 +217,7 @@ int main(int argc, char** argv)
   if (argc > 0) yyin = fopen(argv[0], "r");
   else yyin = stdin;
 
-  if ((f_asm = fopen("test.s", "w")) == NULL) {
+  if ((f_asm = fopen("andes.s", "w")) == NULL) {
     fprintf(stderr, "Cant open the file %s for write\n", "test.s");
     exit(1);
   }
@@ -233,12 +226,8 @@ int main(int argc, char** argv)
 
   init_symbol_table();
 
-  // code_gen_with_header(argv[0]);
-
   if (i = yyparse()) fprintf(stderr, "Bad parse, return code %d\n", i);
   else fprintf(stdout, "\nParsing Successfully\n");
-
-  // code_gen_global_vars();
 
   fprintf(f_asm, "  .ident  \"GCC: (GNU) 4.9.0\"\n");
 }
