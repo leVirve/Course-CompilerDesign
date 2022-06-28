@@ -1,6 +1,6 @@
 
 all:
-	byacc -d grammar.y
+	bison -d grammar.y -y
 	flex token.l
 	gcc lex.yy.c y.tab.c -lfl -o all.o
 	./all.o < testfile.c
