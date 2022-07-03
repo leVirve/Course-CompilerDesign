@@ -1,0 +1,7 @@
+*.out
+*.sh
+lex.yy.c
+y.tab.[hc]
+
+.vscode/
+build/
