@@ -1,5 +1,5 @@
 %{
-    #include "y.tab.h"
+    #include "scanner.h"
     int line = 1;
 %}
 
@@ -30,4 +30,3 @@ symbols         [(){},;]
 {identifier}/=          {printf("#%-2d variable ID: %s\n", line, yytext);return IDENTIFIER;}
 .                       ;
 %%
-

@@ -1,6 +1,8 @@
 %{
     #include <stdio.h>
-    int yydebug=1;
+    int yydebug = 1;
+    extern int yyerror(char*);
+    extern int yylex(void);
 %}
 
 %union {
@@ -8,7 +10,7 @@
     char* strVal;
 }
 
-%token TYPE, IDENTIFIER, FUNCTION_IDENTIFIER, NUMBER, CHAR
+%token TYPE IDENTIFIER FUNCTION_IDENTIFIER NUMBER CHAR
 %token RETURN
 
 %left '+' '-'
