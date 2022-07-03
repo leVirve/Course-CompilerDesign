@@ -5,6 +5,7 @@
     void prints();
     void print_sub();
 %}
+
 datatype        int|double|char
 pointer         int\*|double\*|char\*
 identifier      [a-zA-Z_][a-zA-Z0-9_]*
@@ -20,12 +21,13 @@ string          \".*\"
 "//"+[^\n]*             prints("comment");
 "/*"                    BEGIN COMMENT;
 <COMMENT>\n             { prints("comment"); lines++; }
-<COMMENT>"*/"           { prints("comment"); BEGIN INITIAL; } 
+<COMMENT>"*/"           { prints("comment"); BEGIN INITIAL; }
 <COMMENT>.              ;
 \n                      lines++;
 #include.*              { clear(); print("include header file"); }
 #define.*               { clear(); print("MARCO"); }
-for\(|while\(|if\(      { print_sub(""); unput('('); }
+for\(                   { print_sub("for-loop   : "); }
+while\(|if\(            { print_sub(""); unput('('); }
 return|else             print("");
 {symbol}                print("");
 {string}                print("string     : ");
@@ -39,10 +41,18 @@ return|else             print("");
 .                       ;
 %%
 
-void clear() { yytext[0] = '\0'; }
-void print(char *format)           { printf("#%-2d %s%s\n", lines, format, yytext); }
-void prints(char *p, char* args[]) { printf("#%-2d ", lines); printf(p, args); putchar('\n'); }
-void print_sub(char *format)       { printf("#%-2d %s%.*s\n", lines, format, yyleng - 1, yytext); }
+void clear() {
+    yytext[0] = '\0';
+}
+void print(char *format) {
+    printf("#%-2d %s%s\n", lines, format, yytext);
+}
+void prints(char *p, char* args[]) {
+    printf("#%-2d ", lines); printf(p, args); putchar('\n');
+}
+void print_sub(char *format) {
+    printf("#%-2d %s%.*s\n", lines, format, yyleng - 1, yytext);
+}
 
 int main()
 {
