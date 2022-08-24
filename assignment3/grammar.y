@@ -1,5 +1,6 @@
 %{
   #include <stdio.h>
+  int yydebug = 1;
   #include "asm_lib.h"
   #include <math.h>
   #include <string.h>
@@ -23,7 +24,7 @@
     char    *id;
 }
 
-%token TYPE, IDENTIFIER, NUMBER, CHAR, INTEGER, FLOAT
+%token TYPE REALNUMBER, IDENTIFIER, NUMBER, CHAR, INTEGER, FLOAT
 %token RETURN
 
 %type <id> function_declaration, statement, expression, declaration, parameter
@@ -56,7 +57,7 @@ function
                     int val_idx = look_up_symbol_kw(table[i].name) + 1;
                     if (table[i].scope != cur_scope) break;
                     if (symbol_t[val_idx].token != INTEGER) continue;
-                    
+
                     switch(table[i].mode) {
                     case ARGUMENT_MODE:
                         fprintf(f_asm, "  swi   $r%d, [$fp + (-%d)]\n", 1, table[index].offset * 4 + 8);
@@ -80,9 +81,9 @@ function
 
 function_declaration
         : TYPE IDENTIFIER {
-            $$=install_symbol($2);
-            sprintf(pre_func, "%s", $$);
-            DEBUG("go in %s\n", $$);
+            install_symbol($2);
+            // sprintf(pre_func, "%s", $$);
+            // DEBUG("go in %s\n", $$);
             }
         '(' parameter_list ')' {
                 $$ = $2;
@@ -111,14 +112,14 @@ declarations
 declaration
         : TYPE IDENTIFIER '=' NUMBER {
                 $$=install_symbol($2);
-                printf("TYPE IDENTIFIER '=' expression -> statement\n");
+                printf("TYPE IDENTIFIER '=' expression -> declaration\n");
             }
         | declaration ',' IDENTIFIER '=' NUMBER {
                 $$=install_symbol($3);
             }
         | TYPE IDENTIFIER {
                 $$=install_symbol($2);
-                printf("TYPE IDENTIFIER -> statement\n");
+                printf("TYPE IDENTIFIER -> declaration\n");
             }
 
 
@@ -156,7 +157,7 @@ expression
                 printf("IDENTIFIER '(' parameter_list ')' -> expression\n");
             }
         | expression '/' expression {
-                // ggggg 
+                // ggggg
                 fprintf(f_asm, "  movi  $r0, %d\n", 5);
                 printf("expression '/' expression -> expression\n");
             }

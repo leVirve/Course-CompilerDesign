@@ -1,6 +1,6 @@
 %{
   #include <stdio.h>
-  #include "y.tab.h"
+  #include "andes_compiler.h"
   #include "asm_lib.h"
   FILE* f_asm;
   int line = 0;
@@ -30,16 +30,16 @@ symbols         [(){},;]
 
 {number}                {
     test_install_sym(yytext, INTEGER);
-    printf("A integer: %s\n", yytext);
+    printf("An integer: %s\n", yytext);
     yylval.intv = atoi(yytext);
     return NUMBER;
 }
 
 {realnumber}            {
     test_install_sym(yytext, FLOAT);
-    printf("A integer: %s\n", yytext);
+    printf("A float: %s\n", yytext);
     yylval.intv = atof(yytext);
-    return NUMBER;
+    return REALNUMBER;
 }
 {datatype}              {printf("#%-2d type   : %s\n", line, yytext);return TYPE;}
 

@@ -1,30 +1,32 @@
 all:
-	byacc -vd grammar.y
-	flex token.l
-	gcc lex.yy.c y.tab.c asm_lib.c -lfl -std=gnu11 -o andes_compiler
+	andes_compiler
+
+andes_compiler: token.l grammar.y
+	flex -o $@.yy.c token.l
+	bison -d grammar.y -y -o $@.c
+	cc $@.yy.c $@.c asm_lib.c -lfl -o $@.o
 
 exec:
 	nds32le-elf-gcc andes.s -static -Wa,-g -o andes.adx
 	nds32le-elf-gdb andes.adx -tui
+
 yacc:
 	byacc -vd grammar.y
 	flex token.l
 
 test1:
-	./andes_compiler < test1.c
+	./andes_compiler.o < test1.c
 	cat andes.s
 	diff andes.s test1_ans.s
 
 test2:
-	./andes_compiler< test2.c
+	./andes_compiler.o < test2.c
 	cat andes.s
 	diff andes.s test2_ans.s
 
 clean:
-	rm lex.yy.c
-	rm y.tab.h y.tab.c y.output
-	rm *.gch
-	rm andes.adx
+	rm andes_compiler.*
 	rm andes.s
-	rm andes_compiler
-
+	# rm *.gch
+	# rm andes.adx
+	# rm andes_compiler

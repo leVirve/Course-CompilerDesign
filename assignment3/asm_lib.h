@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "y.tab.h"
+#include "andes_compiler.h"
 #include "const.h"
 
 #define MAX_TABLE_SIZE 5000
@@ -44,11 +44,11 @@ void code_gen_global_vars();
 void code_gen_with_header(char*);
 
 char* install_symbol();
-char* set_local_vars(char*);
+void set_local_vars(char*);
 int look_up_symbol(char*);
 int look_up_symbol_kw(char*);
 void set_scope_and_offset_of_param(char*);
 void code_gen_func_header(char*);
 void code_gen_at_end_of_function_body(char*);
-void pop_up_symbol(int); 
+void pop_up_symbol(int);
 
